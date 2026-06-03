@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"httpq/config"
 	"io"
 	"net/http"
@@ -13,19 +12,16 @@ import (
 )
 
 type HTTPQ struct {
-	RxBytes  int64                  `json:"rxBytes"`  // number of bytes (message body) consumed
-	TxBytes  int64                  `json:"txBytes"`  // number of bytes (message body) published
-	PubFails int64                  `json:"pubFails"` // number of publish failures
-	SubFails int64                  `json:"subFails"` // number of subscribe failures
-	mu       sync.Mutex             `json:"-"`
-	topics   map[string]chan []byte `json:"-"`
-	config   config.Config          `json:"-"`
+	Stats
+	mu     sync.Mutex
+	topics map[string]chan []byte
+	config config.Config
 }
 
 func (h *HTTPQ) Handler() http.Handler {
 	r := chi.NewRouter()
 
-	r.Get("/stats", h.Stats().ServeHTTP)
+	r.Get("/stats", h.HandleStats().ServeHTTP)
 
 	r.Get("/{topic}", h.Consume().ServeHTTP)
 	r.Post("/{topic}", h.Publish().ServeHTTP)
@@ -40,7 +36,7 @@ func (h *HTTPQ) Publish() http.Handler {
 		data, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte("Internal Server Error"))
+			_, _ = w.Write([]byte("internal Server Error"))
 			atomic.AddInt64(&h.PubFails, 1)
 			return
 		}
@@ -81,18 +77,6 @@ func (h *HTTPQ) Consume() http.Handler {
 			w.WriteHeader(http.StatusRequestTimeout)
 			_, _ = w.Write([]byte("request timed out"))
 		}
-	})
-}
-
-func (h *HTTPQ) Stats() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		b, err := json.Marshal(h)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte("Internal Server Error"))
-			return
-		}
-		_, _ = w.Write(b)
 	})
 }
 
