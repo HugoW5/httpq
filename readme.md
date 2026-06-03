@@ -22,7 +22,7 @@ does not matter at this scale but is a real issue.
 - POST `/stats` creates a topic, but you cant read from that topic becasue its ambigous with static the GET/stats endpoint
 
 - Add gracefull shutdown
-- 
+  
 - Add request body size limit
 
 - FIFO Orderning is preserved by the channel sender wait queue.
