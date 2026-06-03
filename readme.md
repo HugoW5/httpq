@@ -10,11 +10,6 @@ You need to have a gcc compiler to use the -race flag. This command runs the tes
 ```bash
 go test -race -count=20
 ```
-
-## Strenghts
-
-
-
 ## Next steps / Comments
  - I currently dont have any topic clean up, every distinct topic creates one channel that lives forever,
 does not matter at this scale but is a real issue.
